@@ -1,11 +1,70 @@
 {
-    "dataCollection":[
-        {
-            "areaId":"IND018006",
-            "areaNid":12,
-            "areaName":"Nagaon",
-            "value": 10.0,
-            "cssClass":"firstslices"
-        }
-    ]
-}
+    "dataCollection": {
+    "IND022":{
+    "id": null,
+    "areaCode": "IND022",
+    "areaName": "Chhattisgarh",
+    "areaNid": 2,
+    "value": "81.1",    
+    "rank": "1",
+    "cssClass": "thirdslices"
+    },
+   "IND009": {
+    "id": null,
+    "areaCode": "IND009",
+    "areaName": "Uttar Pradesh",
+    "areaNid": 35,
+    "value": "49.5",
+    "rank": "2",
+    "cssClass": "firstslices"
+    },
+    "IND036":{
+    "id": null,
+    "areaCode": "IND036",
+    "areaName": "Telangana",
+    "areaNid": 33,
+    "value": "46.8",
+    "rank": "3",
+    "cssClass": "secondslices"
+    }}
+    ,
+    "legends":[
+                {
+                    "key":null,
+                    "value":"firstslices",         
+                    "keyValue":"Below 50"          
+                },
+                {
+                    "key":null,
+                    "value":"secondslices",          
+                    "keyValue":"50.0 - 75.0"           
+                },
+                {
+                    "key":null,
+                    "value":"thirdslices",           
+                    "keyValue":"Above 75"           
+                },
+                {
+                    "key":null,
+                    "value":"fourthslices",
+                    "keyValue":"No Data Available"
+                }
+    ],
+    "areaHighLow":
+            {
+                "high":{
+                    "key":12,
+                    "value":"0.0",
+                    "typeName":null,
+                    "keyValue":"Nagaon",
+                    "checked":false
+                },
+                "low":{
+                    "key":12,
+                    "value":"0.0",
+                    "typeName":null,
+                    "keyValue":"Nagaon",
+                    "checked":false
+                }
+            }
+    }

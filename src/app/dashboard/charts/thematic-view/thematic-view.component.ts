@@ -1,6 +1,8 @@
-import { Component, OnInit, HostListener, ElementRef } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef,Input } from '@angular/core';
 import * as d3 from 'd3v4';
 import * as topojson from 'topojson';
+import { DashboardService } from '../../services/dashboard.service';
+import { ThematicModel } from '../../models/thematic.model';
 
 @Component({
   selector: 'sdrc-thematic-view',
@@ -15,32 +17,19 @@ export class ThematicViewComponent implements OnInit {
   svg;
   g: any;
   mapContainerDiv;
+  thematicData: any;
+  legends: any;
+  thematicDropDownList: any;
+  ngContentId:any;
 
-  constructor() {
+  @Input()
+  mapData:any;
+
+  constructor(private hostRef: ElementRef) {
   }
 
-  // @HostListener('window:resize') onResize() {
-  //   this.width = window.innerWidth
-  //   this.height = window.innerHeight;
-  //   this.projection = d3.geoMercator();
-  //   this.path = d3.geoPath()
-  //     .projection(this.projection)
-  //     .pointRadius(2);
-  //   //d3.selectAll('#map svg').remove();
-  //   this.svg = d3.select("#map").append("svg")
-  //     .attr("width", this.width)
-  //     .attr("height", this.height);
-  //     d3.json("assets/india.json", (error, data) => {
-  //       console.log(data)
-  //       let boundary = this.centerZoom(data);
-  //       let subunits = this.drawSubUnits(data);
-  //       this.colorSubunits(subunits);
-  //       this.drawSubUnitLabels(data);
-  //     });
-  //   this.g = this.svg.append("g");
-  // }
-
-  ngOnInit() {
+   ngOnInit() {
+    this.ngContentId = '_ngcontent-' + this.hostRef.nativeElement.attributes[1].name.substr(8);
       this.width = 800;
       this.height = 400;
       this.projection = d3.geoMercator();
@@ -49,17 +38,16 @@ export class ThematicViewComponent implements OnInit {
         .pointRadius(2);
       this.svg = d3.select("#map").append("svg")
         .attr("width", this.width)
-        .attr("height", this.height);
+        .attr("height", this.height)
       this.g = this.svg.append("g");
           
       d3.json("assets/india.json", (error, data) => {
         let boundary = this.centerZoom(data);
         let subunits = this.drawSubUnits(data);
-        this.colorSubunits(subunits);
-        this.drawSubUnitLabels(data);
-        this.drawPlaces(data);
-        this.drawOuterBoundary(data, boundary);
+        this.colorSubunits(subunits);     
       });
+
+      console.log(this.mapData)
   }
 
   centerZoom(data) {
@@ -78,45 +66,19 @@ export class ThematicViewComponent implements OnInit {
     let p = this.projection
       .scale(s)
       .translate(t);
-
+    //console.log(o);    
     return o;
   }
 
-  drawOuterBoundary(data, boundary) {
+  // drawOuterBoundary(data, boundary) {
 
-    this.g.append("path")
-      .datum(boundary)
-      .attr("d", this.path)
-      .attr("class", "subunit-boundary")
-      .attr("fill", "none")
-      .attr("stroke", "#3a403d");
-
-  }
-
-  drawPlaces(data) {
-
-    this.g.append("path")
-      .datum(topojson.feature(data, data.objects.places))
-      .attr("d", this.path)
-      .attr("class", "place");
-
-    this.g.selectAll(".place-label")
-      .data(topojson.feature(data, data.objects.places).features)
-      .enter().append("text")
-      .attr("class", "place-label")
-      .attr("transform", function (d) {
-        return "translate(" + this.projection(d.geometry.coordinates) + ")";
-      })
-      .attr("dy", ".35em")
-      .attr("x", 6)
-      .attr("text-anchor", "start")
-      .style("font-size", ".7em")
-      .style("text-shadow", "0px 0px 2px #fff")
-      .text(function (d) {
-        return d.properties.name;
-      });
-
-  }
+  //   this.g.append("path")
+  //     .datum(boundary)
+  //     .attr("d", this.path)
+  //     .attr("class", "subunit-boundary")
+  //     .attr("fill", "none")
+  //     .attr("stroke", "#666");
+  // }
 
   drawSubUnits(data) {
 
@@ -126,40 +88,67 @@ export class ThematicViewComponent implements OnInit {
       .attr("class", "subunit")
       .attr("d", this.path)
       .style("stroke", "#fff")
-      .style("stroke-width", "1px");
+      .style("stroke-width", "1px").attr(this.ngContentId, "");
 
     return subunits;
   }
 
-  drawSubUnitLabels(data) {
-
-    this.g.selectAll(".subunit-label")
-      .data(topojson.feature(data, data.objects.layer1).features)
-      .enter().append("text")
-      .attr("class", "subunit-label")
-      .attr("transform", function (d) {
-        return "translate(" + this.path.centroid(d) + ")";
-      })
-      .attr("dy", ".35em")
-      .attr("text-anchor", "middle")
-      .style("font-size", ".5em")
-      .style("text-shadow", "0px 0px 2px #fff")
-      .style("text-transform", "uppercase")
-      .text(function (d) {
-        return d.properties.NAME1_;
-      });
-
-  }
-
   colorSubunits(subunits) {
-
-    let c = d3.scaleOrdinal(d3.schemeCategory20);
     subunits
-      .style("fill", function (d, i) {
-        return c(i);
+      .attr("class",  (d, i) =>{
+        let selectedArea = this.mapData[d.properties.ID_];
+         if(selectedArea)
+         return selectedArea.cssClass;
+         else
+         return "fourthslices";
       })
-      .style("opacity", ".6");
+      .style("opacity", ".7")
+      .on("mouseout",(d)=>this.onmouseout())
+      .on("mouseover", (d) =>
+        this.onover(d)
+      );
   }
+  onover(d){    
+      var rank,datavalue;
+
+      let selectedArea = this.mapData[d.properties.ID_];
+      d3.select(".map_popover_content").html(
+       "<strong>Area Name:</strong> <span style='color:black'>"
+          + d.properties.NAME1_ + "</span>");
+  
+       if (selectedArea) {
+              rank = selectedArea.cssClass;
+              datavalue=selectedArea.value;
+        }else{
+              rank = "Not Available";
+              datavalue = "Not Available";
+        }
+          
+      
+          d3.select(".map_popover_close").html(
+                  "<strong>Rank:</strong> <span style='color:black'>"
+                  + rank + "</span>"
+                  + "<br><strong>Value:</strong> <span style='color:black'>"
+                          + datavalue + "</span>");
+
+                          d3.select(".map_popover").style("display","block")
+          
+          // d3.select(this.parentNode.appendChild(this))
+          //         .classed("activehover", true);
+  }
+  onmousemove(d) {
+      d3.select(".map_popover")
+        .style("display", "block")
+        .style("left", (d3.event.pageX) - 160 + "px")     
+        .style("top", (d3.event.pageY - 900) + "px")
+        .style("opacity", "1");        
+  }
+  onmouseout() {
+    d3.select(".map_popover").style("display", "none");
+    // d3.select(this.parentNode.appendChild(this))
+    // .classed("activehover", false);
+  }
+ 
 }
 
 
